@@ -3,6 +3,7 @@ package gui;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.function.Consumer;
 
 import application.Main;
 import gui.util.Alerts;
@@ -33,21 +34,25 @@ public class MainViewController {
 	}
 
 	@FXML
-	public void onMenuItemDepartmentAction() {
-		loadView2("/gui/DepartmentList.fxml");;
+	public void onMenuItemDepartmentAction() {//segundo parm eh a função para inicializar o controlador
+		loadView("/gui/DepartmentList.fxml", (DepartmentListController controller) -> {
+			controller.setDepartmentService(new DepartmentService());
+			controller.updateTableView();
+		});
 	}
 	
 	@FXML
 	public void onMenuItemAboutAction() {
-		loadView("/gui/About.fxml");
+		loadView("/gui/About.fxml", x -> {});
 	}
 	
 	
 	//@Override
 	public void initialize(URL uri, ResourceBundle rb) {
 	}
+		// <T>: função genérica
 		//synchronized garante q processamento nao será interrompido durante multi trhead
-	private synchronized void loadView(String absoluteName)  {
+	private synchronized <T> void loadView(String absoluteName, Consumer<T> initializingAction)  {
 		try {		
 			FXMLLoader loader = new FXMLLoader(getClass().getResource(absoluteName));
 		    VBox newVbox = loader.load();//carregou view
@@ -61,15 +66,18 @@ public class MainViewController {
 			mainVBox.getChildren().clear();//limpa todos os filhos do mainVbox
 			mainVBox.getChildren().add(mainMenu);
 			mainVBox.getChildren().addAll(newVbox.getChildren());
-		    
-		    
+			//abaixo comando para ativar função Consumer<T> initializingAction
+			T controller = loader.getController();//getController vai retornar o controlador do tipo q chamar lá em cima, no caso DepartmentListController
+		    //abaixo para executar ação initializingAction
+			initializingAction.accept(controller);
+			
 		}
 		catch (IOException e) {
 			Alerts.showAlert("IO Exception", "Error loading view", e.getMessage(), AlertType.ERROR);
 		}
 	}
 	
-	private synchronized void loadView2(String absoluteName)  {
+	/*private synchronized void loadView2(String absoluteName)  {
 		try {		
 			FXMLLoader loader = new FXMLLoader(getClass().getResource(absoluteName));
 		    VBox newVbox = loader.load();//carregou view
@@ -93,5 +101,5 @@ public class MainViewController {
 		}
 		
 	}
-
+	*/
 }
